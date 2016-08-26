@@ -9,10 +9,11 @@ module Aws
       EC2_METADATA_ENDPOINT = 'http://169.254.169.254/latest/meta-data'
 
       def initialize
-        @logger     = Logger.new STDOUT
-        @instance   = Aws::EC2::Instance.new get_instance_id
-        @route53    = Aws::Route53::Client.new
-        @current_ip = get_ip
+        @logger       = Logger.new STDOUT
+        @logger.level = Logger::WARN
+        @instance     = Aws::EC2::Instance.new get_instance_id
+        @route53      = Aws::Route53::Client.new
+        @current_ip   = get_ip
       end
 
       def get_ip
