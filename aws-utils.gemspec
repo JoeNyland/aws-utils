@@ -9,10 +9,10 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Joe Nyland"]
   spec.email         = ["joenyland@me.com"]
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
-  spec.license       = "MIT"
+  spec.summary       = 'AWS utilities'
+  spec.description   = 'A collection of utilities for use on AWS'
+  spec.homepage      = 'https://github.com/MasterRoot24/aws-utils'
+  spec.license       = 'MIT'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
