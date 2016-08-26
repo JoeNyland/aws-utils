@@ -10,7 +10,7 @@ module Aws
 
       def initialize
         @logger       = Logger.new STDOUT
-        @logger.level = Logger::WARN
+        @logger.level = Logger::WARN # ToDo: Allow this level to be set on the command line with an argument
         @instance     = Aws::EC2::Instance.new get_instance_id
         @route53      = Aws::Route53::Client.new
         @current_ip   = get_ip
