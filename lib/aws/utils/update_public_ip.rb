@@ -1,3 +1,7 @@
+require 'aws-sdk'
+require 'net/http'
+require 'logger'
+
 module Aws
   module Utils
     class UpdatePublicIP
