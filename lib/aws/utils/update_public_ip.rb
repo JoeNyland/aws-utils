@@ -8,12 +8,14 @@ module Aws
 
       EC2_METADATA_ENDPOINT = 'http://169.254.169.254/latest/meta-data'
 
-      def initialize
+      def initialize(args = {})
         @logger       = Logger.new STDOUT
-        @logger.level = Logger::WARN # ToDo: Allow this level to be set on the command line with an argument
+        @logger.level = args[:log_level] || Logger::WARN
         @instance     = Aws::EC2::Instance.new get_instance_id
         @route53      = Aws::Route53::Client.new
         @current_ip   = get_ip
+        @target_rrset   = args[:fqdn]
+        @target_zone_id = get_zone
       end
 
       def get_ip
@@ -85,9 +87,7 @@ module Aws
         @logger.debug 'Created the rrset'
       end
 
-      def run!(fqdn)
-        @target_rrset   = fqdn
-        @target_zone_id = get_zone
+      def run!
         update_rrset
       end
 
