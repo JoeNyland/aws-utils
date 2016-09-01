@@ -71,7 +71,7 @@ module Aws
                           resource_record_set: {
                             name: @target_rrset,
                             type: 'A',
-                            ttl: 10,
+                            ttl: 1,
                             resource_records: [
                                     {
                                       value: @current_ip
