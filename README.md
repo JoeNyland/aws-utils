@@ -28,6 +28,14 @@ Gets the public IP address of the local EC2 instance and creates an entry in Rou
 update-public-ip-in-route53 --fqdn server.example.com
 ```
 
+### `update-public-ip-in-security-group`
+
+Gets the public IP address of the local machine and creates a VPC Security Group in EC2.
+
+```
+update-public-ip-in-security-group --security-group-name my-sg
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
