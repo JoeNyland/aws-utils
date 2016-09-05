@@ -1,17 +1,17 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
-require 'aws/utils/update_public_ip'
+require 'aws/utils/route53/update_public_ip'
 
 # Parse command-line arguments
 options = {}
 ARGV << '-h' if ARGV.empty? # Show the help message if no command line arguments are provided
 OptionParser.new do |opts|
-  opts.on('-f', '--fqdn FQDN', 'FQDN of the hostname to update in Route52') { |v| options[:fqdn] = v }
+  opts.on('-f', '--fqdn FQDN', 'FQDN of the hostname to update in Route53') { |v| options[:fqdn] = v }
   opts.on('-q', '--quiet', 'Only log errors') { || options[:log_level] = Logger.const_get('ERROR') }
   opts.on('-v', '--verbose', 'Verbose logging') { || options[:log_level] = Logger.const_get('INFO') }
   opts.on('-d', '--debug', 'Debug logging') { || options[:log_level] = Logger.const_get('DEBUG') }
 end.parse!
 
-Aws::Utils::UpdatePublicIP.new(options).run!
+Aws::Utils::Route53::UpdatePublicIP.new(options).run!
 

@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'aws/utils/ec2/update_public_ip'
+
+# Parse command-line arguments
+options = {}
+ARGV << '-h' if ARGV.empty? # Show the help message if no command line arguments are provided
+OptionParser.new do |opts|
+  opts.on('-s', '--security-group-name SECURITY_GROUP_NAME', 'Security group name') { |v| options[:group_name] = v }
+end.parse!
+
+Aws::Utils::EC2::UpdatePublicIP.update_public_ip_in_security_group(options[:group_name])
