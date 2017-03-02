@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'AWS utilities'
   spec.description   = 'A collection of utilities for use on AWS'
-  spec.homepage      = 'https://github.com/MasterRoot24/aws-utils'
+  spec.homepage      = 'https://github.com/JoeNyland/aws-utils'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
