@@ -1,13 +1,53 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
-require 'aws/utils/ec2/update_public_ip'
+require 'logger'
+require 'core_ext'
+require 'aws-sdk'
+require 'aws/utils'
 
-# Parse command-line arguments
 options = {}
 ARGV << '-h' if ARGV.empty? # Show the help message if no command line arguments are provided
 OptionParser.new do |opts|
-  opts.on('-s', '--security-group-name SECURITY_GROUP_NAME', 'Security group name') { |v| options[:group_name] = v }
+  opts.on('--vpc-id VPC_ID', 'ID of a specific VPC to use') { |v| options[:vpc_id] = v }
+  opts.on('--security-group-id SECURITY_GROUP_ID', 'ID of a specific security group to use') { |v| options[:sg_id] = v }
+  opts.on('-q', '--quiet', 'Quiet output (ERROR output only)') { | | options[:log_level] = Logger::ERROR }
+  opts.on('-d', '--debug', 'Enable debug output (includes AWS API calls)') { | | options[:log_level] = Logger::DEBUG }
 end.parse!
 
-Aws::Utils::EC2::UpdatePublicIP.update_public_ip_in_security_group(options[:group_name])
+%i[vpc_id sg_id].each do |arg|
+  raise Aws::Utils::Error::MissingArgument, "--#{arg.to_s.tr('_', '-')} is required" if options[arg].nil?
+end
+
+STDERR.sync     = true
+logger          = Logger.new STDERR
+logger.level    = options[:log_level] || Logger::INFO
+current_ip_cidr = IPAddr.current_public_ip.to_cidr
+error_count     = 0
+
+begin
+  client     = Aws::EC2::Client.new logger: logger, log_level: :debug
+  sg_results = client.describe_security_groups(group_ids: [options[:sg_id]]).security_groups
+  raise Aws::Utils::Error::SecurityGroupNotFound if sg_results.empty?
+  sg = Aws::EC2::SecurityGroup.new id: sg_results.first.group_id, client: client
+  begin
+    sg.authorize_ingress ip_protocol: '-1', cidr_ip: current_ip_cidr
+  rescue Aws::EC2::Errors::InvalidPermissionDuplicate
+    logger.info "The Security Group '#{options[:sg_id]}' is already up to date"
+  end
+  begin
+    logger.info "Purging other rules in SG '(#{sg.id})' that don't match the current IP"
+    sg.ip_permissions.each do |p|
+      unless p.ip_ranges.reject! { |r| r.cidr_ip == current_ip_cidr }.empty?
+        sg.revoke_ingress ip_permissions: [{ ip_protocol: p.ip_protocol, ip_ranges: p.ip_ranges }]
+      end
+    end
+  rescue Aws::EC2::Errors::InvalidParameterValue => e
+    raise e
+  end
+rescue Aws::Errors => e
+  error_count += 1
+  sleep 10
+  retry unless error_count > 5
+  raise e
+end
