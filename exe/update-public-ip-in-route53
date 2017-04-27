@@ -1,17 +1,54 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
-require 'aws/utils/route53/update_public_ip'
+require 'logger'
+require 'core_ext'
+require 'aws-sdk'
+require 'aws/utils'
+require 'aws/ec2/instance'
 
 # Parse command-line arguments
 options = {}
 ARGV << '-h' if ARGV.empty? # Show the help message if no command line arguments are provided
 OptionParser.new do |opts|
-  opts.on('-f', '--fqdn FQDN', 'FQDN of the hostname to update in Route53') { |v| options[:fqdn] = v }
-  opts.on('-q', '--quiet', 'Only log errors') { || options[:log_level] = Logger.const_get('ERROR') }
-  opts.on('-v', '--verbose', 'Verbose logging') { || options[:log_level] = Logger.const_get('INFO') }
-  opts.on('-d', '--debug', 'Debug logging') { || options[:log_level] = Logger.const_get('DEBUG') }
+  opts.on('-f FQDN', '--fqdn FQDN', 'FQDN of the hostname to update in Route53') { |v| options[:fqdn] = v }
+  opts.on('-z ZONE_ID', '--zone-id ZONE_ID',
+          'Zone ID of the domain to create/update the record in') { |v| options[:zone_id] = v }
+  opts.on('-q', '--quiet', 'Quiet output (ERROR output only)') { || options[:log_level] = Logger::ERROR }
+  opts.on('-d', '--debug', 'Enable debug output (includes AWS API calls)') { || options[:log_level] = Logger::DEBUG }
 end.parse!
 
-Aws::Utils::Route53::UpdatePublicIP.new(options).run!
+%i[fqdn zone_id].each do |arg|
+  raise Aws::Utils::Error::MissingArgument, "--#{arg.to_s.tr('_', '-')} is required" if options[arg].nil?
+end
 
+STDERR.sync  = true
+logger       = Logger.new STDERR
+logger.level = options[:log_level] || Logger::INFO
+error_count  = 0
+
+begin
+  r53_client    = Aws::Route53::Client.new logger: logger, log_level: :debug
+  ec2_client    = Aws::EC2::Client.new logger: logger, log_level: :debug
+  this_instance = Aws::EC2::Instance.local client: ec2_client
+  r53_client.change_resource_record_sets(
+    hosted_zone_id: options[:zone_id],
+    change_batch: {
+      changes: [{
+        action: 'UPSERT',
+        resource_record_set: {
+          name: options[:fqdn],
+          type: 'A',
+          ttl:  1,
+          resource_records: [{ value: this_instance.public_ip_address }]
+        }
+      }]
+    }
+  )
+  logger.info 'Completed updating record'
+rescue Aws::Errors => e
+  error_count += 1
+  sleep 10
+  retry unless error_count > 5
+  raise e
+end
