@@ -25,7 +25,11 @@ Or install it yourself as:
 Gets the public IP address of the local EC2 instance and creates an entry in Route53.
 
 ```
-update-public-ip-in-route53 --fqdn server.example.com
+Usage: update-public-ip-in-route53 [options]
+    -f, --fqdn FQDN                  FQDN of the hostname to update in Route53
+    -z, --zone-id ZONE_ID            Zone ID of the domain to create/update the record in
+    -q, --quiet                      Quiet output (ERROR output only)
+    -d, --debug                      Enable debug output (includes AWS API calls)
 ```
 
 ### `update-public-ip-in-security-group`
@@ -33,7 +37,12 @@ update-public-ip-in-route53 --fqdn server.example.com
 Gets the public IP address of the local machine and creates a VPC Security Group in EC2.
 
 ```
-update-public-ip-in-security-group --security-group-name my-sg
+Usage: update-public-ip-in-security-group [options]
+        --vpc-id VPC_ID              ID of a specific VPC to use
+        --security-group-id SECURITY_GROUP_ID
+                                     ID of a specific security group to use
+    -q, --quiet                      Quiet output (ERROR output only)
+    -d, --debug                      Enable debug output (includes AWS API calls)
 ```
 
 ## Development
