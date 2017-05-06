@@ -32,6 +32,7 @@ begin
   sg = Aws::EC2::SecurityGroup.new id: sg_results.first.group_id, client: client
   begin
     sg.authorize_ingress ip_protocol: '-1', cidr_ip: current_ip_cidr
+    logger.info "Added the current public IP '#{current_ip_cidr}' to the Security Group '#{options[:sg_id]}'"
   rescue Aws::EC2::Errors::InvalidPermissionDuplicate
     logger.info "The Security Group '#{options[:sg_id]}' is already up to date"
   end
