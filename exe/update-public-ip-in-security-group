@@ -33,18 +33,18 @@ begin
   begin
     sg.authorize_ingress ip_protocol: '-1', cidr_ip: current_ip_cidr
     logger.info "Added the current public IP '#{current_ip_cidr}' to the Security Group '#{options[:sg_id]}'"
+    begin
+      logger.info "Purging other rules in SG '(#{sg.id})' that don't match the current IP"
+      sg.ip_permissions.each do |p|
+        unless p.ip_ranges.reject! { |r| r.cidr_ip == current_ip_cidr }.empty?
+          sg.revoke_ingress ip_permissions: [{ ip_protocol: p.ip_protocol, ip_ranges: p.ip_ranges }]
+        end
+      end
+    rescue Aws::EC2::Errors::InvalidParameterValue => e
+      raise e
+    end
   rescue Aws::EC2::Errors::InvalidPermissionDuplicate
     logger.info "The Security Group '#{options[:sg_id]}' is already up to date"
-  end
-  begin
-    logger.info "Purging other rules in SG '(#{sg.id})' that don't match the current IP"
-    sg.ip_permissions.each do |p|
-      unless p.ip_ranges.reject! { |r| r.cidr_ip == current_ip_cidr }.empty?
-        sg.revoke_ingress ip_permissions: [{ ip_protocol: p.ip_protocol, ip_ranges: p.ip_ranges }]
-      end
-    end
-  rescue Aws::EC2::Errors::InvalidParameterValue => e
-    raise e
   end
 rescue Aws::Errors => e
   error_count += 1
