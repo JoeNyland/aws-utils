@@ -23,7 +23,7 @@ STDERR.sync     = true
 logger          = Logger.new STDERR
 logger.level    = options[:log_level] || Logger::INFO
 current_ip_cidr = IPAddr.current_public_ip.to_cidr
-error_count     = 0
+errors = Hash.new 0
 
 begin
   client     = Aws::EC2::Client.new logger: logger, log_level: :debug
@@ -46,9 +46,10 @@ begin
   rescue Aws::EC2::Errors::InvalidPermissionDuplicate
     logger.info "The Security Group '#{options[:sg_id]}' is already up to date"
   end
-rescue Aws::Errors => e
-  error_count += 1
+rescue Aws::Errors, SocketError => e
+  errors[e.class] += 1
   sleep 10
-  retry unless error_count > 5
+  retry unless errors[e.class] > 5
+  logger.error "Error '#{e.class}' has been raised more than 5 times"
   raise e
 end
