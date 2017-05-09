@@ -22,10 +22,10 @@ end
 STDERR.sync     = true
 logger          = Logger.new STDERR
 logger.level    = options[:log_level] || Logger::INFO
-current_ip_cidr = IPAddr.current_public_ip.to_cidr
 errors = Hash.new 0
 
 begin
+  current_ip_cidr = IPAddr.current_public_ip.to_cidr
   client     = Aws::EC2::Client.new logger: logger, log_level: :debug
   sg_results = client.describe_security_groups(group_ids: [options[:sg_id]]).security_groups
   raise Aws::Utils::Error::SecurityGroupNotFound if sg_results.empty?
