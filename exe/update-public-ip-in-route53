@@ -46,7 +46,7 @@ begin
     }
   )
   logger.info 'Completed updating record'
-rescue Aws::Errors, SocketError => e
+rescue Aws::Errors, Aws::EC2::Errors, SocketError => e
   errors[e.class] += 1
   sleep 10
   retry unless errors[e.class] > 5
