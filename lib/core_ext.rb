@@ -18,6 +18,7 @@ class IPAddr
           next
         end
       end
+      raise IPAddr::Error, 'Failed to find the current IP address'
     end
   end
 end

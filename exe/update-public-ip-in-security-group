@@ -46,7 +46,7 @@ begin
   rescue Aws::EC2::Errors::InvalidPermissionDuplicate
     logger.info "The Security Group '#{options[:sg_id]}' is already up to date"
   end
-rescue Aws::Errors, Aws::EC2::Errors, SocketError => e
+rescue Aws::Errors, Aws::EC2::Errors, SocketError, IPAddr::Error => e
   errors[e.class] += 1
   sleep 10
   retry unless errors[e.class] > 5
