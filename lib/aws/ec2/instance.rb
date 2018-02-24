@@ -1,6 +1,3 @@
-# require 'net/http'
-# require 'open-uri'
-
 module Aws
   module EC2
     class Instance
